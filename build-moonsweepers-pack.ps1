@@ -3,14 +3,16 @@ Builds the Moon Sweepers BepInEx pack from public source: Il2CppInterop (branch 
 BepInEx (branch moonsweepers-pack) builds against it with its normal build, and the win-x64 IL2CPP distribution, which
 takes doorstop, dobby and the .NET runtime from their official releases, is laid out as a Thunderstore package.
 
-Needs git and a .NET SDK that builds net8.0. Run from anywhere; everything happens under -WorkDir.
+Needs Windows, git and a .NET SDK that builds net8.0. Run from anywhere; everything happens under -WorkDir. To build from
+your own forks, pass -Owner with your GitHub account; the pack's website link and README follow it.
 #>
 param(
     [Parameter(Mandatory)][string]$WorkDir,
     [string]$PackVersion = '0.1.0',
-    [string]$BepInExSource = 'https://github.com/Andrew1431/BepInEx.git',
+    [string]$Owner = 'Andrew1431',
+    [string]$BepInExSource = "https://github.com/$Owner/BepInEx.git",
     [string]$BepInExBranch = 'moonsweepers-pack',
-    [string]$Il2CppInteropSource = 'https://github.com/Andrew1431/Il2CppInterop.git',
+    [string]$Il2CppInteropSource = "https://github.com/$Owner/Il2CppInterop.git",
     [string]$Il2CppInteropBranch = 'v108'
 )
 $ErrorActionPreference = 'Stop'
@@ -65,12 +67,13 @@ Copy-Item (Join-Path $interop 'LICENSE') (Join-Path $licenses 'Il2CppInterop-LIC
 $manifest = [ordered]@{
     name           = 'BepInExPack_MoonSweepers'
     version_number = $PackVersion
-    website_url    = 'https://github.com/Andrew1431/BepInEx/tree/moonsweepers-pack'
+    website_url    = "https://github.com/$Owner/BepInEx/tree/$BepInExBranch"
     description    = 'Unofficial BepInEx 6 IL2CPP pack for Moon Sweepers (Unity 6000.6, metadata v108). Built from public forks until upstream supports the game.'
     dependencies   = @()
 }
 [IO.File]::WriteAllText((Join-Path $package 'manifest.json'), ($manifest | ConvertTo-Json), (New-Object Text.UTF8Encoding $false))
-Copy-Item (Join-Path $bepinex 'MOONSWEEPERS-PACK.md') (Join-Path $package 'README.md')
+$readme = [IO.File]::ReadAllText((Join-Path $bepinex 'MOONSWEEPERS-PACK.md')).Replace('Andrew1431', $Owner)
+[IO.File]::WriteAllText((Join-Path $package 'README.md'), $readme, (New-Object Text.UTF8Encoding $false))
 
 Add-Type -AssemblyName System.Drawing
 $icon = New-Object Drawing.Bitmap 256, 256
